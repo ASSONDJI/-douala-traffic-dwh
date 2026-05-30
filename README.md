@@ -26,9 +26,8 @@ docker compose up -d
 ## Modèle dimensionnel (Kimball)
 
 **3 Tables de faits :**
-- `FAIT_MESURE_TRAFIC` — Transaction (mesure capteur toutes les 5 min)
 - `FAIT_EMBOUTEILLAGE` — Accumulating Snapshot (cycle de vie d'un bouchon)
-- `FAIT_SNAPSHOT_HORAIRE` — Periodic Snapshot (état horaire par segment)
+
 
 **6 Dimensions conformées :**
 `DIM_TEMPS` · `DIM_LIEU` · `DIM_VEHICULE` · `DIM_EVENEMENT` · `DIM_TRAJET` · `DIM_CAPTEUR`
