@@ -1,0 +1,166 @@
+version: '3.8'
+
+networks:
+  dwh-network:
+    driver: bridge
+
+volumes:
+  postgres-dwh-data:
+  postgres-airflow-data:
+  superset-data:
+
+services:
+
+  # ──────────────────────────────────────────
+  #  PostgreSQL — Le Data Warehouse
+  #  Accès : localhost:5432
+  #  BDD : douala_traffic_dwh
+  # ──────────────────────────────────────────
+  postgres-dwh:
+    image: postgres:16-alpine
+    container_name: douala_dwh_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: douala_traffic_dwh
+      POSTGRES_USER: dwh_admin
+      POSTGRES_PASSWORD: Douala2024!
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-dwh-data:/var/lib/postgresql/data
+      - ../scripts/init_db.sql:/docker-entrypoint-initdb.d/init_db.sql
+    networks:
+      - dwh-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dwh_admin -d douala_traffic_dwh"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ──────────────────────────────────────────
+  #  PostgreSQL — Base interne Airflow
+  #  (séparée du DWH)
+  # ──────────────────────────────────────────
+  postgres-airflow:
+    image: postgres:16-alpine
+    container_name: douala_airflow_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: airflow
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow_pass
+    volumes:
+      - postgres-airflow-data:/var/lib/postgresql/data
+    networks:
+      - dwh-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U airflow"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ──────────────────────────────────────────
+  #  Airflow — Orchestrateur ETL
+  #  Interface : http://localhost:8080
+  #  Login : admin / admin
+  # ──────────────────────────────────────────
+  airflow-init:
+    image: apache/airflow:2.8.1
+    container_name: douala_airflow_init
+    depends_on:
+      postgres-airflow:
+        condition: service_healthy
+    environment:
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow_pass@postgres-airflow/airflow
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+      _AIRFLOW_DB_MIGRATE: 'true'
+      _AIRFLOW_WWW_USER_CREATE: 'true'
+      _AIRFLOW_WWW_USER_USERNAME: admin
+      _AIRFLOW_WWW_USER_PASSWORD: admin
+    command: version
+    networks:
+      - dwh-network
+
+  airflow-webserver:
+    image: apache/airflow:2.8.1
+    container_name: douala_airflow_web
+    restart: unless-stopped
+    depends_on:
+      postgres-airflow:
+        condition: service_healthy
+    environment:
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow_pass@postgres-airflow/airflow
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+      AIRFLOW__WEBSERVER__SECRET_KEY: douala-traffic-secret-key-2024
+      AIRFLOW_CONN_DOUALA_DWH: postgresql+psycopg2://dwh_admin:Douala2024!@postgres-dwh/douala_traffic_dwh
+    ports:
+      - "8080:8080"
+    volumes:
+      - ../airflow/dags:/opt/airflow/dags
+      - ../airflow/plugins:/opt/airflow/plugins
+      - ../data:/opt/airflow/data
+      - ../etl:/opt/airflow/etl
+    command: webserver
+    networks:
+      - dwh-network
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  airflow-scheduler:
+    image: apache/airflow:2.8.1
+    container_name: douala_airflow_scheduler
+    restart: unless-stopped
+    depends_on:
+      postgres-airflow:
+        condition: service_healthy
+    environment:
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow_pass@postgres-airflow/airflow
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+      AIRFLOW_CONN_DOUALA_DWH: postgresql+psycopg2://dwh_admin:Douala2024!@postgres-dwh/douala_traffic_dwh
+    volumes:
+      - ../airflow/dags:/opt/airflow/dags
+      - ../airflow/plugins:/opt/airflow/plugins
+      - ../data:/opt/airflow/data
+      - ../etl:/opt/airflow/etl
+    command: scheduler
+    networks:
+      - dwh-network
+
+  # ──────────────────────────────────────────
+  #  Apache Superset — Dashboards BI
+  #  Interface : http://localhost:8088
+  #  Login : admin / admin
+  # ──────────────────────────────────────────
+  superset:
+    image: apache/superset:3.1.0
+    container_name: douala_superset
+    restart: unless-stopped
+    environment:
+      SUPERSET_SECRET_KEY: douala-superset-secret-2024
+    ports:
+      - "8088:8088"
+    volumes:
+      - superset-data:/app/superset_home
+    depends_on:
+      postgres-dwh:
+        condition: service_healthy
+    networks:
+      - dwh-network
+    command: >
+      bash -c "
+        superset db upgrade &&
+        superset fab create-admin
+          --username admin
+          --firstname Admin
+          --lastname Douala
+          --email admin@douala-traffic.cm
+          --password admin 2>/dev/null || true &&
+        superset init &&
+        superset run -h 0.0.0.0 -p 8088
+      "
