@@ -1,9 +1,8 @@
--- ============================================================
 --  DIM_CAPTEUR — Dimension Source de Mesure
 --  Type SCD : 2
 --  Représente les "capteurs" virtuels ou réels qui mesurent
 --  le trafic (API GPS, simulation, caméra, etc.)
--- ============================================================
+
 
 CREATE TABLE IF NOT EXISTS warehouse.dim_capteur (
     id_capteur              SERIAL      PRIMARY KEY,
@@ -54,4 +53,4 @@ COMMENT ON TABLE warehouse.dim_capteur IS
 (data lineage) : savoir quelle source a produit chaque mesure.
 Essentiel pour la gouvernance des données.';
 
-SELECT 'DIM_CAPTEUR créée et peuplée ✅' AS statut;
+SELECT 'DIM_CAPTEUR créée et peuplée ' AS statut;

@@ -1,8 +1,7 @@
--- ============================================================
 --  DIM_VEHICULE — Dimension Type de Véhicule
 --  Type SCD : 1 (écrasement simple — les catégories évoluent peu)
 --  Spécificité : inclut le Bendskin (moto-taxi), essentiel à Douala
--- ============================================================
+
 
 CREATE TABLE IF NOT EXISTS warehouse.dim_vehicule (
     id_vehicule         SERIAL          PRIMARY KEY,
@@ -62,4 +61,4 @@ COMMENT ON TABLE warehouse.dim_vehicule IS
 Bendskin (moto-taxi omniprésent), Clando (taxi clandestin).
 Le coefficient PCE permet de normaliser les volumes de trafic.';
 
-SELECT 'DIM_VEHICULE créée et peuplée ✅' AS statut;
+SELECT 'DIM_VEHICULE créée et peuplée ' AS statut;

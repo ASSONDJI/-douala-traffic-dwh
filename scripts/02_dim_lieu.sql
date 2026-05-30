@@ -1,9 +1,9 @@
--- ============================================================
+
 --  DIM_LIEU — Dimension Lieu (Segments de route à Douala)
 --  Type SCD : 2 (on garde l'historique si un segment change)
 --  Source : OpenStreetMap (données réelles)
 --  Grain : 1 enregistrement par segment de route actif
--- ============================================================
+
 
 CREATE TABLE IF NOT EXISTS warehouse.dim_lieu (
     -- Clé surrogate (générée automatiquement)
@@ -84,4 +84,4 @@ COMMENT ON TABLE warehouse.dim_lieu IS
 SCD Type 2 : conservation de l''historique des modifications.
 Alimentée par les données OpenStreetMap réelles de Douala.';
 
-SELECT 'DIM_LIEU créée ✅' AS statut;
+SELECT 'DIM_LIEU créée ' AS statut;

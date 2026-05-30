@@ -1,9 +1,9 @@
--- ============================================================
+
 --  DIM_TEMPS — Dimension Temps
 --  Type SCD : 0 (statique — le temps ne change jamais)
 --  Grain : 1 enregistrement par tranche de 5 minutes
 --  Couvre : 2020-01-01 → 2026-12-31
--- ============================================================
+
 
 CREATE TABLE IF NOT EXISTS warehouse.dim_temps (
     -- Clé surrogate (format : YYYYMMDDHH24MI → ex: 202401150730)
@@ -59,4 +59,4 @@ COMMENT ON TABLE warehouse.dim_temps IS
 Inclut les spécificités camerounaises : jours fériés officiels,
 saisons climatiques de Douala, heures de pointe locales.';
 
-SELECT 'DIM_TEMPS créée ✅' AS statut;
+SELECT 'DIM_TEMPS créée ' AS statut;

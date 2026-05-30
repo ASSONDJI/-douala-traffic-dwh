@@ -1,9 +1,9 @@
--- ============================================================
---  SCRIPT MAÎTRE — Crée toute la structure du DWH
---  Exécuter dans l'ordre : \i scripts/00_run_all.sql
--- ============================================================
 
-\echo '=== Création DWH Douala Traffic ==='
+SCRIPT MAÎTRE — Crée toute la structure du DWH
+Exécuter dans l'ordre : \i scripts/00_run_all.sql
+
+
+\echo ' Création DWH Douala Traffic '
 \echo ''
 
 \i /scripts/01_dim_temps.sql
@@ -16,4 +16,4 @@
 \i /scripts/08_vues_datamart.sql
 
 \echo ''
-\echo '=== ✅ DWH Douala Traffic — Structure complète créée ==='
+\echo ' DWH Douala Traffic — Structure complète créée '

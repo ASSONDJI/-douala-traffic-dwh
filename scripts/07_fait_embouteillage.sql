@@ -1,4 +1,4 @@
--- ============================================================
+
 --  FAIT_EMBOUTEILLAGE — Table de Faits Centrale
 --  Méthodologie : Kimball — Transaction Grain
 --  Grain : 1 mesure de trafic par segment × par tranche de 5 min
@@ -8,7 +8,7 @@
 --   analytiques (roll-up horaire, journalier, mensuel) via OLAP,
 --   tout en capturant les variations rapides caractéristiques
 --   du trafic urbain de Douala." — Kimball, The DW Toolkit
--- ============================================================
+
 
 CREATE TABLE IF NOT EXISTS warehouse.fait_embouteillage (
 
@@ -132,4 +132,4 @@ Contient toutes les métriques nécessaires aux opérations OLAP :
 roll-up (5min→heure→jour→mois), drill-down, slice (par pluie),
 dice (pluie + vendredi + Ndokoti).';
 
-SELECT 'FAIT_EMBOUTEILLAGE créée ✅' AS statut;
+SELECT 'FAIT_EMBOUTEILLAGE créée ' AS statut;

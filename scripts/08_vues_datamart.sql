@@ -1,8 +1,7 @@
--- ============================================================
 --  VUES DATAMART — Opérations OLAP pré-calculées
 --  Ces vues matérialisées servent les dashboards Superset
 --  et démontrent les opérations OLAP (cours Annaba séance 6-7)
--- ============================================================
+
 
 -- ── Vue 1 : Roll-up Horaire ────────────────────────────────
 -- Agrège les mesures de 5 min → synthèse par heure
@@ -106,4 +105,4 @@ CREATE INDEX IF NOT EXISTS idx_vm_horaire_quartier
 CREATE INDEX IF NOT EXISTS idx_vm_axes_nom
     ON datamart.vm_axes_critiques(axe_principal);
 
-SELECT 'Vues OLAP datamart créées ✅' AS statut;
+SELECT 'Vues OLAP datamart créées ' AS statut;

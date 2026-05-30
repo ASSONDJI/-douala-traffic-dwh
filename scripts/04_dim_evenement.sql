@@ -1,10 +1,9 @@
--- ============================================================
 --  DIM_EVENEMENT — Dimension Événement
 --  Type SCD : 1
 --  Regroupe : météo, manifestations, matchs, marchés, accidents
 --  Conformément à la décision de conception : la météo est
 --  un TYPE d'événement (pas une dimension séparée)
--- ============================================================
+
 
 CREATE TABLE IF NOT EXISTS warehouse.dim_evenement (
     id_evenement        SERIAL          PRIMARY KEY,
@@ -112,4 +111,4 @@ COMMENT ON TABLE warehouse.dim_evenement IS
 La météo est un sous-type d''événement (choix de conception justifié
 par la simplicité du modèle et la recommandation de l''enseignant).';
 
-SELECT 'DIM_EVENEMENT créée et peuplée ✅' AS statut;
+SELECT 'DIM_EVENEMENT créée et peuplée ' AS statut;

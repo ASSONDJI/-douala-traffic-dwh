@@ -1,8 +1,7 @@
--- ============================================================
 --  DIM_TRAJET — Dimension Trajet (Origine → Destination)
 --  Type SCD : 2 (historique si itinéraire change)
 --  Grain : 1 paire Origine-Destination dans Douala
--- ============================================================
+
 
 CREATE TABLE IF NOT EXISTS warehouse.dim_trajet (
     id_trajet               SERIAL      PRIMARY KEY,
@@ -49,4 +48,4 @@ COMMENT ON TABLE warehouse.dim_trajet IS
 SCD Type 2 : permet de tracer l''évolution des durées de référence
 si les infrastructures routières changent.';
 
-SELECT 'DIM_TRAJET créée ✅' AS statut;
+SELECT 'DIM_TRAJET créée ' AS statut;
