@@ -17,7 +17,7 @@ services:
   #  BDD : douala_traffic_dwh
   # ──────────────────────────────────────────
   postgres-dwh:
-    image: postgres:16-alpine
+    image: timescale/timescaledb:latest-pg16
     container_name: douala_dwh_db
     restart: unless-stopped
     environment:
@@ -42,7 +42,7 @@ services:
   #  (séparée du DWH)
   # ──────────────────────────────────────────
   postgres-airflow:
-    image: postgres:16-alpine
+    image: timescale/timescaledb:latest-pg16
     container_name: douala_airflow_db
     restart: unless-stopped
     environment:
