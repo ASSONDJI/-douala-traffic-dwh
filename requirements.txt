@@ -1,0 +1,11 @@
+# Versions compatibles Python 3.8 (Airflow 2.8.1)
+osmnx==1.6.0
+geopandas==0.13.2
+shapely==2.0.0
+pandas==2.0.3
+numpy==1.24.4
+requests==2.32.3
+psycopg2-binary==2.9.9
+flask==3.0.3
+flask-cors==4.0.1
+apache-airflow-providers-postgres==5.10.0
