@@ -2,735 +2,369 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DWH — Analyse des Embouteillages à Douala</title>
+<title>DWH — Embouteillages Douala</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0a0e1a;--bg2:#111827;--card:#1a2235;--card2:#1e2a40;--blue:#3b82f6;--cyan:#06b6d4;--green:#10b981;--yellow:#f59e0b;--red:#ef4444;--purple:#8b5cf6;--t1:#f1f5f9;--t2:#94a3b8;--border:#1e3a5f}
+body{background:var(--bg);color:var(--t1);font-family:'Segoe UI',system-ui,sans-serif}
+header{background:linear-gradient(135deg,#0f172a,#1a2235,#0f172a);border-bottom:1px solid var(--border);padding:18px 40px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200}
+.hdr-left{display:flex;align-items:center;gap:14px}
+.hdr-icon{width:46px;height:46px;background:linear-gradient(135deg,var(--blue),var(--cyan));border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px}
+.hdr-title h1{font-size:20px;font-weight:700;background:linear-gradient(135deg,var(--blue),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.hdr-title p{font-size:12px;color:var(--t2);margin-top:2px}
+.live-badge{background:rgba(16,185,129,.15);border:1px solid var(--green);color:var(--green);padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;display:flex;align-items:center;gap:6px}
+.dot{width:7px;height:7px;background:var(--green);border-radius:50%;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.3)}}
+.filters{background:var(--bg2);border-bottom:1px solid var(--border);padding:12px 40px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.filter-label{font-size:12px;color:var(--t2);text-transform:uppercase;letter-spacing:.5px}
+.filter-select{background:var(--card);border:1px solid var(--border);color:var(--t1);padding:6px 12px;border-radius:8px;font-size:13px;cursor:pointer}
+.filter-select:focus{outline:none;border-color:var(--blue)}
+.filter-btn{border:none;color:#fff;padding:7px 16px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;transition:opacity .2s}
+.filter-btn:hover{opacity:.85}
+.filter-btn.apply{background:linear-gradient(135deg,var(--blue),var(--cyan))}
+.filter-btn.reset{background:var(--card);border:1px solid var(--border);color:var(--t2)}
+.filter-active-tag{background:rgba(59,130,246,.15);border:1px solid var(--blue);color:var(--blue);padding:4px 10px;border-radius:20px;font-size:11px;display:none;align-items:center;gap:6px}
+.filter-active-tag.show{display:flex}
+.filter-active-tag .close-tag{cursor:pointer;font-size:14px;line-height:1}
+main{padding:28px 40px;max-width:1600px;margin:0 auto}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin-bottom:28px}
+.kpi{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;position:relative;overflow:hidden;transition:transform .2s,box-shadow .2s}
+.kpi:hover{transform:translateY(-3px);box-shadow:0 8px 28px rgba(59,130,246,.15)}
+.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:14px 14px 0 0}
+.kpi.bl::before{background:var(--blue)}.kpi.cy::before{background:var(--cyan)}.kpi.gn::before{background:var(--green)}.kpi.yw::before{background:var(--yellow)}.kpi.rd::before{background:var(--red)}.kpi.pu::before{background:var(--purple)}
+.kpi-icon{font-size:26px;margin-bottom:10px;display:block}
+.kpi-val{font-size:30px;font-weight:800;line-height:1}
+.kpi.bl .kpi-val{color:var(--blue)}.kpi.cy .kpi-val{color:var(--cyan)}.kpi.gn .kpi-val{color:var(--green)}.kpi.yw .kpi-val{color:var(--yellow)}.kpi.rd .kpi-val{color:var(--red)}.kpi.pu .kpi-val{color:var(--purple)}
+.kpi-lbl{font-size:11px;color:var(--t2);margin-top:5px;text-transform:uppercase;letter-spacing:.5px}
+.kpi-sub{font-size:11px;color:var(--t2);margin-top:3px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-bottom:22px}
+.row1{margin-bottom:22px}
+.row3{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-bottom:22px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:22px}
+.card:hover{box-shadow:0 4px 22px rgba(59,130,246,.1)}
+.card-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.card-title{font-size:14px;font-weight:600}.card-sub{font-size:11px;color:var(--t2);margin-top:2px}
+.badge{font-size:11px;padding:3px 10px;border-radius:20px;font-weight:600}
+.b-bl{background:rgba(59,130,246,.15);color:var(--blue)}.b-gn{background:rgba(16,185,129,.15);color:var(--green)}.b-yw{background:rgba(245,158,11,.15);color:var(--yellow)}.b-pu{background:rgba(139,92,246,.15);color:var(--purple)}.b-cy{background:rgba(6,182,212,.15);color:var(--cyan)}
+.chart-box{position:relative;height:260px}
+#map{height:400px;border-radius:10px;z-index:1}
+.leaflet-popup-content-wrapper{background:var(--card);color:var(--t1);border:1px solid var(--border)}
+.leaflet-popup-tip{background:var(--card)}
+.hm-wrap{overflow-x:auto}
+.hm-table{width:100%;border-collapse:collapse;font-size:10px}
+.hm-table th{padding:5px 3px;text-align:center;color:var(--t2);font-weight:500;white-space:nowrap}
+.hm-table td{width:36px;height:28px;text-align:center;border-radius:3px;font-size:9px;font-weight:600;cursor:default;transition:transform .1s}
+.hm-table td:hover{transform:scale(1.2);z-index:1;position:relative}
+.rank-table{width:100%;border-collapse:collapse}
+.rank-table th{font-size:11px;color:var(--t2);text-transform:uppercase;letter-spacing:.5px;padding:8px 10px;border-bottom:1px solid var(--border)}
+.rank-table td{padding:10px;font-size:12px;border-bottom:1px solid rgba(30,58,95,.3)}
+.rank-table tr:hover td{background:var(--card2)}
+.rb{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700}
+.r1{background:rgba(245,158,11,.2);color:#f59e0b}.r2{background:rgba(148,163,184,.2);color:#94a3b8}.r3{background:rgba(180,120,60,.2);color:#cd7f32}.rn{background:rgba(59,130,246,.1);color:var(--blue)}
+.los{padding:3px 7px;border-radius:10px;font-size:10px;font-weight:700}
+.lA{background:rgba(16,185,129,.2);color:#10b981}.lB{background:rgba(6,182,212,.2);color:#06b6d4}.lC{background:rgba(245,158,11,.2);color:#f59e0b}.lD{background:rgba(249,115,22,.2);color:#f97316}.lE{background:rgba(239,68,68,.2);color:#ef4444}.lF{background:rgba(139,0,0,.3);color:#ff4444}
+.pbar{height:5px;background:rgba(255,255,255,.05);border-radius:3px;overflow:hidden;margin-top:3px}
+.pfill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--blue),var(--cyan));transition:width 1s ease}
+.spin{display:flex;align-items:center;justify-content:center;height:180px;color:var(--t2);font-size:13px;gap:8px}
+.spinner{width:18px;height:18px;border:2px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
 
-  :root {
-    --bg-primary:    #0a0e1a;
-    --bg-secondary:  #111827;
-    --bg-card:       #1a2235;
-    --bg-card-hover: #1e2a40;
-    --accent-blue:   #3b82f6;
-    --accent-cyan:   #06b6d4;
-    --accent-green:  #10b981;
-    --accent-yellow: #f59e0b;
-    --accent-red:    #ef4444;
-    --accent-purple: #8b5cf6;
-    --text-primary:  #f1f5f9;
-    --text-secondary:#94a3b8;
-    --border:        #1e3a5f;
-    --gradient-1:    linear-gradient(135deg, #1a2235, #0f172a);
-  }
+/* ── Boutons de filtre rapide quartier ── */
+.quick-filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:22px;align-items:center}
+.quick-label{font-size:12px;color:var(--t2);margin-right:4px}
+.qbtn{background:var(--card);border:1px solid var(--border);color:var(--t2);padding:5px 14px;border-radius:20px;font-size:12px;cursor:pointer;transition:all .2s}
+.qbtn:hover{border-color:var(--blue);color:var(--blue)}
+.qbtn.active{background:var(--blue);border-color:var(--blue);color:#fff;font-weight:600}
 
-  body {
-    background: var(--bg-primary);
-    color: var(--text-primary);
-    font-family: 'Segoe UI', system-ui, sans-serif;
-    min-height: 100vh;
-  }
-
-  /* ── HEADER ── */
-  header {
-    background: linear-gradient(135deg, #0f172a 0%, #1a2235 50%, #0f172a 100%);
-    border-bottom: 1px solid var(--border);
-    padding: 20px 40px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    position: sticky;
-    top: 0;
-    z-index: 100;
-    backdrop-filter: blur(10px);
-  }
-
-  .header-left { display: flex; align-items: center; gap: 16px; }
-
-  .header-icon {
-    width: 48px; height: 48px;
-    background: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan));
-    border-radius: 12px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 24px;
-  }
-
-  .header-title h1 {
-    font-size: 22px; font-weight: 700;
-    background: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan));
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-  }
-
-  .header-title p {
-    font-size: 13px; color: var(--text-secondary); margin-top: 2px;
-  }
-
-  .header-badge {
-    background: rgba(16,185,129,0.15);
-    border: 1px solid var(--accent-green);
-    color: var(--accent-green);
-    padding: 6px 14px; border-radius: 20px;
-    font-size: 12px; font-weight: 600;
-    display: flex; align-items: center; gap: 6px;
-  }
-
-  .badge-dot {
-    width: 7px; height: 7px;
-    background: var(--accent-green);
-    border-radius: 50%;
-    animation: pulse 2s infinite;
-  }
-
-  @keyframes pulse {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50%       { opacity: 0.5; transform: scale(1.3); }
-  }
-
-  /* ── MAIN ── */
-  main { padding: 32px 40px; max-width: 1600px; margin: 0 auto; }
-
-  /* ── KPI CARDS ── */
-  .kpi-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 16px; margin-bottom: 32px;
-  }
-
-  .kpi-card {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 24px 20px;
-    position: relative; overflow: hidden;
-    transition: transform 0.2s, box-shadow 0.2s;
-  }
-
-  .kpi-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 8px 32px rgba(59,130,246,0.15);
-  }
-
-  .kpi-card::before {
-    content: '';
-    position: absolute; top: 0; left: 0; right: 0; height: 3px;
-    border-radius: 16px 16px 0 0;
-  }
-
-  .kpi-card.blue::before   { background: var(--accent-blue); }
-  .kpi-card.cyan::before   { background: var(--accent-cyan); }
-  .kpi-card.green::before  { background: var(--accent-green); }
-  .kpi-card.yellow::before { background: var(--accent-yellow); }
-  .kpi-card.red::before    { background: var(--accent-red); }
-  .kpi-card.purple::before { background: var(--accent-purple); }
-
-  .kpi-icon {
-    font-size: 28px; margin-bottom: 12px; display: block;
-  }
-
-  .kpi-value {
-    font-size: 32px; font-weight: 800;
-    line-height: 1;
-  }
-
-  .kpi-card.blue   .kpi-value { color: var(--accent-blue); }
-  .kpi-card.cyan   .kpi-value { color: var(--accent-cyan); }
-  .kpi-card.green  .kpi-value { color: var(--accent-green); }
-  .kpi-card.yellow .kpi-value { color: var(--accent-yellow); }
-  .kpi-card.red    .kpi-value { color: var(--accent-red); }
-  .kpi-card.purple .kpi-value { color: var(--accent-purple); }
-
-  .kpi-label {
-    font-size: 12px; color: var(--text-secondary);
-    margin-top: 6px; text-transform: uppercase; letter-spacing: 0.5px;
-  }
-
-  .kpi-sub {
-    font-size: 11px; color: var(--text-secondary);
-    margin-top: 4px;
-  }
-
-  /* ── CHARTS GRID ── */
-  .charts-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 24px; margin-bottom: 24px;
-  }
-
-  .charts-grid.full { grid-template-columns: 1fr; }
-
-  .chart-card {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 24px;
-    transition: box-shadow 0.2s;
-  }
-
-  .chart-card:hover {
-    box-shadow: 0 4px 24px rgba(59,130,246,0.1);
-  }
-
-  .chart-header {
-    display: flex; align-items: center;
-    justify-content: space-between;
-    margin-bottom: 20px;
-  }
-
-  .chart-title {
-    font-size: 15px; font-weight: 600;
-    color: var(--text-primary);
-  }
-
-  .chart-subtitle {
-    font-size: 12px; color: var(--text-secondary); margin-top: 2px;
-  }
-
-  .chart-badge {
-    font-size: 11px; padding: 4px 10px;
-    border-radius: 20px; font-weight: 600;
-  }
-
-  .badge-blue   { background: rgba(59,130,246,0.15); color: var(--accent-blue); }
-  .badge-green  { background: rgba(16,185,129,0.15); color: var(--accent-green); }
-  .badge-yellow { background: rgba(245,158,11,0.15); color: var(--accent-yellow); }
-  .badge-purple { background: rgba(139,92,246,0.15); color: var(--accent-purple); }
-
-  .chart-container { position: relative; height: 280px; }
-
-  /* ── HEATMAP ── */
-  .heatmap-container { overflow-x: auto; }
-
-  .heatmap-table {
-    width: 100%; border-collapse: collapse;
-    font-size: 11px;
-  }
-
-  .heatmap-table th {
-    padding: 6px 4px; text-align: center;
-    color: var(--text-secondary); font-weight: 500;
-    white-space: nowrap;
-  }
-
-  .heatmap-table td {
-    width: 38px; height: 32px;
-    text-align: center; border-radius: 4px;
-    font-size: 10px; font-weight: 600;
-    transition: transform 0.1s;
-    cursor: default;
-  }
-
-  .heatmap-table td:hover { transform: scale(1.15); z-index: 1; position: relative; }
-
-  /* ── RANKING TABLE ── */
-  .ranking-table { width: 100%; border-collapse: collapse; }
-
-  .ranking-table th {
-    font-size: 11px; color: var(--text-secondary);
-    text-transform: uppercase; letter-spacing: 0.5px;
-    padding: 10px 12px; text-align: left;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .ranking-table td {
-    padding: 12px; font-size: 13px;
-    border-bottom: 1px solid rgba(30,58,95,0.3);
-  }
-
-  .ranking-table tr:hover td { background: var(--bg-card-hover); }
-
-  .rank-badge {
-    width: 28px; height: 28px; border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 12px; font-weight: 700;
-  }
-
-  .rank-1 { background: rgba(245,158,11,0.2); color: #f59e0b; }
-  .rank-2 { background: rgba(148,163,184,0.2); color: #94a3b8; }
-  .rank-3 { background: rgba(180,120,60,0.2);  color: #cd7f32; }
-  .rank-n { background: rgba(59,130,246,0.1);  color: var(--accent-blue); }
-
-  .los-badge {
-    padding: 3px 8px; border-radius: 10px;
-    font-size: 11px; font-weight: 700;
-  }
-
-  .los-A { background: rgba(16,185,129,0.2);  color: #10b981; }
-  .los-B { background: rgba(6,182,212,0.2);   color: #06b6d4; }
-  .los-C { background: rgba(245,158,11,0.2);  color: #f59e0b; }
-  .los-D { background: rgba(249,115,22,0.2);  color: #f97316; }
-  .los-E { background: rgba(239,68,68,0.2);   color: #ef4444; }
-  .los-F { background: rgba(139,0,0,0.3);     color: #ff4444; }
-
-  .progress-bar {
-    height: 6px; background: rgba(255,255,255,0.05);
-    border-radius: 3px; overflow: hidden; margin-top: 4px;
-  }
-
-  .progress-fill {
-    height: 100%; border-radius: 3px;
-    background: linear-gradient(90deg, var(--accent-blue), var(--accent-cyan));
-    transition: width 1s ease;
-  }
-
-  /* ── LOADING ── */
-  .loading {
-    display: flex; align-items: center; justify-content: center;
-    height: 200px; color: var(--text-secondary); font-size: 14px;
-    gap: 10px;
-  }
-
-  .spinner {
-    width: 20px; height: 20px;
-    border: 2px solid var(--border);
-    border-top-color: var(--accent-blue);
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-  }
-
-  @keyframes spin { to { transform: rotate(360deg); } }
-
-  /* ── FOOTER ── */
-  footer {
-    text-align: center; padding: 24px;
-    color: var(--text-secondary); font-size: 12px;
-    border-top: 1px solid var(--border); margin-top: 16px;
-  }
-
-  /* ── RESPONSIVE ── */
-  @media (max-width: 900px) {
-    main { padding: 16px; }
-    .charts-grid { grid-template-columns: 1fr; }
-    header { padding: 16px; flex-direction: column; gap: 12px; }
-  }
+footer{text-align:center;padding:20px;color:var(--t2);font-size:11px;border-top:1px solid var(--border);margin-top:10px}
+@media(max-width:900px){main{padding:14px}.row2,.row3{grid-template-columns:1fr}header{padding:14px;flex-direction:column;gap:10px}.filters{padding:10px 14px}}
 </style>
 </head>
 <body>
-
 <header>
-  <div class="header-left">
-    <div class="header-icon">🚦</div>
-    <div class="header-title">
+  <div class="hdr-left">
+    <div class="hdr-icon">🚦</div>
+    <div class="hdr-title">
       <h1>Analyse des Embouteillages — Douala</h1>
-      <p>Entrepôt de Données · Méthodologie Kimball · Master 1 IA</p>
+      <p>Entrepôt de Données · Méthodologie Kimball · Master 1 IA · Cameroun</p>
     </div>
   </div>
-  <div class="header-badge">
-    <span class="badge-dot"></span>
-    Données en direct · PostgreSQL
-  </div>
+  <div class="live-badge"><span class="dot"></span>Données en direct · PostgreSQL + TimescaleDB</div>
 </header>
 
+<div class="filters">
+  <span class="filter-label">Filtrer par :</span>
+  <select class="filter-select" id="f-quartier"><option value="">Tous les quartiers</option></select>
+  <select class="filter-select" id="f-los">
+    <option value="">Tous niveaux LOS</option>
+    <option value="A">LOS A — Fluide</option><option value="B">LOS B — Bon</option>
+    <option value="C">LOS C — Chargé</option><option value="D">LOS D — Instable</option>
+    <option value="E">LOS E — Saturé</option><option value="F">LOS F — Bloqué</option>
+  </select>
+  <button class="filter-btn apply" onclick="applyFilters()">▶ Appliquer</button>
+  <button class="filter-btn reset" onclick="resetFilters()">↺ Réinitialiser</button>
+  <div class="filter-active-tag" id="active-tag">
+    <span id="active-tag-text"></span>
+    <span class="close-tag" onclick="resetFilters()">×</span>
+  </div>
+</div>
+
 <main>
+  <div class="kpi-grid" id="kpis"><div class="spin"><div class="spinner"></div>Chargement...</div></div>
 
-  <!-- KPI CARDS -->
-  <div class="kpi-grid" id="kpi-grid">
-    <div class="loading"><div class="spinner"></div> Chargement...</div>
+  <!-- Boutons de filtre rapide -->
+  <div class="quick-filters" id="quick-filters">
+    <span class="quick-label">Filtre rapide :</span>
+    <button class="qbtn active" onclick="quickFilter('')">Tous</button>
   </div>
 
-  <!-- ROW 1 : Axes + Météo -->
-  <div class="charts-grid">
-    <div class="chart-card">
-      <div class="chart-header">
-        <div>
-          <div class="chart-title">🏙️ Top 10 Axes Congestionnés</div>
-          <div class="chart-subtitle">Indice de congestion moyen par axe</div>
-        </div>
-        <span class="chart-badge badge-blue">Drill-down</span>
+  <div class="row2">
+    <div class="card">
+      <div class="card-hdr">
+        <div><div class="card-title">🏙️ Top 10 Axes Congestionnés</div><div class="card-sub" id="sub-axes">Tous quartiers · Indice de congestion moyen</div></div>
+        <span class="badge b-bl">Drill-down</span>
       </div>
-      <div class="chart-container">
-        <canvas id="chart-axes"></canvas>
-      </div>
+      <div class="chart-box"><canvas id="ch-axes"></canvas></div>
     </div>
-
-    <div class="chart-card">
-      <div class="chart-header">
-        <div>
-          <div class="chart-title">🌧️ Impact de la Météo sur le Trafic</div>
-          <div class="chart-subtitle">Congestion selon les conditions météo</div>
-        </div>
-        <span class="chart-badge badge-yellow">Slice</span>
+    <div class="card">
+      <div class="card-hdr">
+        <div><div class="card-title">🌧️ Impact Météo sur le Trafic</div><div class="card-sub">Congestion et vitesse selon les conditions</div></div>
+        <span class="badge b-yw">Slice</span>
       </div>
-      <div class="chart-container">
-        <canvas id="chart-meteo"></canvas>
-      </div>
+      <div class="chart-box"><canvas id="ch-meteo"></canvas></div>
     </div>
   </div>
 
-  <!-- ROW 2 : Heatmap -->
-  <div class="charts-grid full">
-    <div class="chart-card">
-      <div class="chart-header">
-        <div>
-          <div class="chart-title">🗓️ Heatmap Congestion — Jour × Heure</div>
-          <div class="chart-subtitle">Indice de congestion moyen par créneau horaire et jour de la semaine</div>
-        </div>
-        <span class="chart-badge badge-purple">Pivot CUBE</span>
-      </div>
-      <div class="heatmap-container" id="heatmap-container">
-        <div class="loading"><div class="spinner"></div> Chargement heatmap...</div>
-      </div>
+  <div class="row1 card">
+    <div class="card-hdr">
+      <div><div class="card-title">🗺️ Carte des Axes Critiques — Douala</div><div class="card-sub">Coordonnées GPS réelles · OpenStreetMap · Taille du cercle = intensité de congestion</div></div>
+      <span class="badge b-cy">GPS Réel</span>
     </div>
+    <div id="map"></div>
   </div>
 
-  <!-- ROW 3 : Evolution + Ranking -->
-  <div class="charts-grid">
-    <div class="chart-card">
-      <div class="chart-header">
-        <div>
-          <div class="chart-title">📈 Évolution Mensuelle de la Congestion</div>
-          <div class="chart-subtitle">Roll-up temporel : grain 5min → mois</div>
-        </div>
-        <span class="chart-badge badge-green">Roll-up</span>
-      </div>
-      <div class="chart-container">
-        <canvas id="chart-evolution"></canvas>
-      </div>
+  <div class="row1 card">
+    <div class="card-hdr">
+      <div><div class="card-title">🗓️ Heatmap Congestion — Jour × Heure</div><div class="card-sub" id="sub-heatmap">Tous quartiers · Indice moyen par créneau · 7 jours × 24 heures</div></div>
+      <span class="badge b-pu">Pivot CUBE</span>
     </div>
-
-    <div class="chart-card">
-      <div class="chart-header">
-        <div>
-          <div class="chart-title">🏆 Classement des Axes Critiques</div>
-          <div class="chart-subtitle">Niveau de service et délai supplémentaire</div>
-        </div>
-        <span class="chart-badge badge-blue">Ranking</span>
-      </div>
-      <div id="ranking-table-container">
-        <div class="loading"><div class="spinner"></div> Chargement...</div>
-      </div>
-    </div>
+    <div class="hm-wrap" id="heatmap"><div class="spin"><div class="spinner"></div>Chargement...</div></div>
   </div>
 
+  <div class="row3">
+    <div class="card">
+      <div class="card-hdr">
+        <div><div class="card-title">📈 Évolution Mensuelle</div><div class="card-sub">Roll-up : grain 5min → mois</div></div>
+        <span class="badge b-gn">Roll-up</span>
+      </div>
+      <div class="chart-box"><canvas id="ch-evo"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-hdr">
+        <div><div class="card-title">🏆 Classement Axes Critiques</div><div class="card-sub" id="sub-rank">Tous quartiers · Niveau de service et progression</div></div>
+        <span class="badge b-bl">Ranking</span>
+      </div>
+      <div id="ranking"><div class="spin"><div class="spinner"></div>Chargement...</div></div>
+    </div>
+  </div>
 </main>
 
-<footer>
-  Entrepôt de Données · Embouteillages Douala · Cameroun &nbsp;·&nbsp;
-  Sources : OpenStreetMap + Open-Meteo · 2 502 240 mesures · Grain : 5 minutes
-</footer>
+<footer>Entrepôt de Données · Embouteillages Douala · Cameroun &nbsp;·&nbsp; Sources : OpenStreetMap + Open-Meteo · TimescaleDB + PostgreSQL · 2 502 240 mesures · Grain : 5 min</footer>
 
 <script>
-const API = 'http://localhost:5050/api';
+const API='http://localhost:5050/api';
+const CD={plugins:{legend:{labels:{color:'#94a3b8',font:{size:11}}},tooltip:{backgroundColor:'#1a2235',borderColor:'#1e3a5f',borderWidth:1,titleColor:'#f1f5f9',bodyColor:'#94a3b8',padding:10}},scales:{x:{ticks:{color:'#94a3b8',font:{size:10}},grid:{color:'rgba(30,58,95,.3)'}},y:{ticks:{color:'#94a3b8',font:{size:10}},grid:{color:'rgba(30,58,95,.3)'}}}};
 
-const CHART_DEFAULTS = {
-  plugins: {
-    legend: { labels: { color: '#94a3b8', font: { size: 11 } } },
-    tooltip: {
-      backgroundColor: '#1a2235',
-      borderColor: '#1e3a5f', borderWidth: 1,
-      titleColor: '#f1f5f9', bodyColor: '#94a3b8',
-      padding: 10,
-    }
-  },
-  scales: {
-    x: {
-      ticks: { color: '#94a3b8', font: { size: 10 } },
-      grid:  { color: 'rgba(30,58,95,0.3)' }
-    },
-    y: {
-      ticks: { color: '#94a3b8', font: { size: 10 } },
-      grid:  { color: 'rgba(30,58,95,0.3)' }
-    }
-  }
-};
+let chAxes=null, chMeteo=null, chEvo=null;
+let activeQuartier='';
 
-function losFromIndice(v) {
-  if (v < 1.11) return 'A';
-  if (v < 1.43) return 'B';
-  if (v < 2.00) return 'C';
-  if (v < 2.50) return 'D';
-  if (v < 4.00) return 'E';
-  return 'F';
+function los(v){if(v<1.11)return'A';if(v<1.43)return'B';if(v<2)return'C';if(v<2.5)return'D';if(v<4)return'E';return'F'}
+function heatColor(v){const t=Math.min(1,Math.max(0,(v-1)/.9));const r=Math.round(10+t*220),g=Math.round(185-t*150),b=Math.round(129-t*100);return`rgba(${r},${g},${b},${.4+t*.6})`}
+function markerColor(v){if(v<1.2)return'#10b981';if(v<1.5)return'#f59e0b';if(v<2)return'#f97316';return'#ef4444'}
+
+async function loadKPIs(){
+  const d=await fetch(`${API}/stats_globales`).then(r=>r.json());
+  document.getElementById('kpis').innerHTML=`
+    <div class="kpi bl"><span class="kpi-icon">📊</span><div class="kpi-val">${Number(d.total_mesures).toLocaleString('fr')}</div><div class="kpi-lbl">Mesures totales</div><div class="kpi-sub">Grain : 5 minutes</div></div>
+    <div class="kpi cy"><span class="kpi-icon">🚗</span><div class="kpi-val">${(Number(d.volume_total)/1e6).toFixed(1)}M</div><div class="kpi-lbl">Véhicules comptés</div><div class="kpi-sub">2023 – 2024</div></div>
+    <div class="kpi yw"><span class="kpi-icon">⚡</span><div class="kpi-val">${d.congestion_moyenne}</div><div class="kpi-lbl">Indice congestion moyen</div><div class="kpi-sub">LOS ${los(d.congestion_moyenne)}</div></div>
+    <div class="kpi gn"><span class="kpi-icon">🏎️</span><div class="kpi-val">${d.vitesse_moyenne} km/h</div><div class="kpi-lbl">Vitesse moyenne</div><div class="kpi-sub">Tous segments</div></div>
+    <div class="kpi rd"><span class="kpi-icon">⚠️</span><div class="kpi-val">${Number(d.total_incidents).toLocaleString('fr')}</div><div class="kpi-lbl">Incidents détectés</div><div class="kpi-sub">Sur 2 ans</div></div>
+    <div class="kpi pu"><span class="kpi-icon">🗺️</span><div class="kpi-val">20</div><div class="kpi-lbl">Axes critiques</div><div class="kpi-sub">Données OSM réelles</div></div>`;
 }
 
-function heatColor(v) {
-  const min = 1.0, max = 1.9;
-  const t = Math.min(1, Math.max(0, (v - min) / (max - min)));
-  const r = Math.round(10  + t * 220);
-  const g = Math.round(185 - t * 150);
-  const b = Math.round(129 - t * 100);
-  return `rgba(${r},${g},${b},${0.4 + t * 0.6})`;
+async function renderAxes(quartier){
+  const url=quartier?`${API}/axes_critiques_filtres?quartier=${encodeURIComponent(quartier)}`:`${API}/axes_critiques`;
+  const d=await fetch(url).then(r=>r.json());
+  if(chAxes){chAxes.destroy();chAxes=null;}
+  const ctx=document.getElementById('ch-axes');
+  chAxes=new Chart(ctx,{type:'bar',data:{
+    labels:d.map(x=>x.axe_principal.length>22?x.axe_principal.slice(0,22)+'…':x.axe_principal),
+    datasets:[{label:'Indice de congestion',data:d.map(x=>x.indice_cong_moyen),
+      backgroundColor:d.map((_,i)=>`hsla(${210-i*8},80%,${60-i*2}%,.8)`),
+      borderColor:d.map((_,i)=>`hsla(${210-i*8},80%,${70-i*2}%,1)`),
+      borderWidth:1,borderRadius:5}]},
+    options:{...CD,indexAxis:'y',plugins:{...CD.plugins,legend:{display:false}},
+      scales:{x:{...CD.scales.x,min:1.0},y:{...CD.scales.y}}}});
+  document.getElementById('sub-axes').textContent=(quartier?`Quartier : ${quartier}`:'Tous quartiers')+' · Indice de congestion moyen';
 }
 
-// ── KPI Cards ──────────────────────────────────────────────
-async function loadKPIs() {
-  const data = await fetch(`${API}/stats_globales`).then(r => r.json());
-  document.getElementById('kpi-grid').innerHTML = `
-    <div class="kpi-card blue">
-      <span class="kpi-icon">📊</span>
-      <div class="kpi-value">${Number(data.total_mesures).toLocaleString('fr')}</div>
-      <div class="kpi-label">Mesures totales</div>
-      <div class="kpi-sub">Grain : 5 minutes</div>
-    </div>
-    <div class="kpi-card cyan">
-      <span class="kpi-icon">🚗</span>
-      <div class="kpi-value">${(Number(data.volume_total)/1e6).toFixed(1)}M</div>
-      <div class="kpi-label">Véhicules comptés</div>
-      <div class="kpi-sub">2023 – 2024</div>
-    </div>
-    <div class="kpi-card yellow">
-      <span class="kpi-icon">⚡</span>
-      <div class="kpi-value">${data.congestion_moyenne}</div>
-      <div class="kpi-label">Indice congestion moyen</div>
-      <div class="kpi-sub">LOS ${losFromIndice(data.congestion_moyenne)}</div>
-    </div>
-    <div class="kpi-card green">
-      <span class="kpi-icon">🏎️</span>
-      <div class="kpi-value">${data.vitesse_moyenne} km/h</div>
-      <div class="kpi-label">Vitesse moyenne</div>
-      <div class="kpi-sub">Tous segments confondus</div>
-    </div>
-    <div class="kpi-card red">
-      <span class="kpi-icon">⚠️</span>
-      <div class="kpi-value">${Number(data.total_incidents).toLocaleString('fr')}</div>
-      <div class="kpi-label">Incidents détectés</div>
-      <div class="kpi-sub">Sur 2 ans</div>
-    </div>
-    <div class="kpi-card purple">
-      <span class="kpi-icon">🗺️</span>
-      <div class="kpi-value">20</div>
-      <div class="kpi-label">Axes critiques</div>
-      <div class="kpi-sub">Douala — données OSM</div>
-    </div>
-  `;
+async function loadMeteo(){
+  const d=await fetch(`${API}/impact_meteo`).then(r=>r.json());
+  const colors={'Ensoleille':'#f59e0b','Nuageux':'#94a3b8','Pluie legere':'#06b6d4','Pluie forte':'#3b82f6','Orage':'#8b5cf6'};
+  if(chMeteo){chMeteo.destroy();chMeteo=null;}
+  chMeteo=new Chart(document.getElementById('ch-meteo'),{type:'bar',data:{
+    labels:d.map(x=>x.condition_meteo),
+    datasets:[
+      {label:'Congestion',data:d.map(x=>x.indice_cong_moyen),yAxisID:'y',
+        backgroundColor:d.map(x=>(colors[x.condition_meteo]||'#3b82f6')+'cc'),
+        borderColor:d.map(x=>colors[x.condition_meteo]||'#3b82f6'),borderWidth:1,borderRadius:5},
+      {label:'Vitesse (km/h)',data:d.map(x=>x.vitesse_moy),type:'line',yAxisID:'y2',
+        borderColor:'#10b981',backgroundColor:'rgba(16,185,129,.1)',borderWidth:2,
+        pointRadius:5,fill:true,tension:.4}]},
+    options:{...CD,scales:{x:{...CD.scales.x},
+      y:{...CD.scales.y,position:'left',title:{display:true,text:'Congestion',color:'#94a3b8'}},
+      y2:{...CD.scales.y,position:'right',grid:{drawOnChartArea:false},title:{display:true,text:'km/h',color:'#94a3b8'}}}}});
 }
 
-// ── Chart Axes ─────────────────────────────────────────────
-async function loadAxes() {
-  const data = await fetch(`${API}/axes_critiques`).then(r => r.json());
-  const labels = data.map(d => d.axe_principal.length > 20
-    ? d.axe_principal.substring(0,20) + '…' : d.axe_principal);
-  new Chart(document.getElementById('chart-axes'), {
-    type: 'bar',
-    data: {
-      labels,
-      datasets: [{
-        label: 'Indice de congestion',
-        data: data.map(d => d.indice_cong_moyen),
-        backgroundColor: data.map((_, i) =>
-          `hsla(${210 - i*8}, 80%, ${60 - i*2}%, 0.8)`),
-        borderColor: data.map((_, i) =>
-          `hsla(${210 - i*8}, 80%, ${70 - i*2}%, 1)`),
-        borderWidth: 1, borderRadius: 6,
-      }]
-    },
-    options: {
-      ...CHART_DEFAULTS,
-      indexAxis: 'y',
-      plugins: {
-        ...CHART_DEFAULTS.plugins,
-        legend: { display: false },
-      },
-      scales: {
-        x: { ...CHART_DEFAULTS.scales.x, min: 1.0 },
-        y: { ...CHART_DEFAULTS.scales.y }
-      }
-    }
+async function loadMap(){
+  const d=await fetch(`${API}/carte_axes`).then(r=>r.json());
+  const map=L.map('map',{center:[4.0511,9.7679],zoom:13,preferCanvas:true});
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+    {attribution:'© OpenStreetMap · © CartoDB',maxZoom:19}).addTo(map);
+  d.forEach(ax=>{
+    if(!ax.lat||!ax.lon)return;
+    const v=parseFloat(ax.congestion_moy),color=markerColor(v),l=los(v);
+    L.circleMarker([parseFloat(ax.lat),parseFloat(ax.lon)],
+      {radius:10+v*4,fillColor:color,color:color,weight:2,opacity:.9,fillOpacity:.7})
+      .addTo(map)
+      .bindPopup(`<div style="min-width:200px">
+        <div style="font-weight:700;font-size:13px;margin-bottom:8px">${ax.nom_segment}</div>
+        <div style="color:#94a3b8;font-size:11px">📍 ${ax.quartier} · ${ax.arrondissement}</div>
+        <div style="color:#94a3b8;font-size:11px">🛣️ ${ax.type_route}</div>
+        <hr style="border-color:#1e3a5f;margin:8px 0">
+        <div style="display:flex;justify-content:space-between;font-size:12px"><span>Congestion</span><strong style="color:${color}">${ax.congestion_moy} (LOS ${l})</strong></div>
+        <div style="display:flex;justify-content:space-between;font-size:12px;margin-top:4px"><span>Vitesse moy</span><strong style="color:#10b981">${ax.vitesse_moy} km/h</strong></div>
+        <div style="display:flex;justify-content:space-between;font-size:12px;margin-top:4px"><span>Mesures</span><strong style="color:#3b82f6">${Number(ax.nb_mesures).toLocaleString('fr')}</strong></div>
+      </div>`);
+  });
+  const leg=L.control({position:'bottomright'});
+  leg.onAdd=()=>{const el=L.DomUtil.create('div');
+    el.style.cssText='background:#1a2235;padding:12px;border-radius:8px;border:1px solid #1e3a5f;font-size:11px;color:#f1f5f9';
+    el.innerHTML='<div style="font-weight:700;margin-bottom:8px">Niveau de congestion</div><div>🟢 LOS A-B &lt;1.2 — Fluide</div><div>🟡 LOS C &lt;1.5 — Chargé</div><div>🟠 LOS D &lt;2.0 — Instable</div><div>🔴 LOS E-F ≥2.0 — Saturé</div>';
+    return el};
+  leg.addTo(map);
+}
+
+async function renderHeatmap(quartier){
+  document.getElementById('heatmap').innerHTML='<div class="spin"><div class="spinner"></div>Chargement...</div>';
+  const url=quartier?`${API}/profil_semaine_filtre?quartier=${encodeURIComponent(quartier)}`:`${API}/profil_semaine`;
+  const d=await fetch(url).then(r=>r.json());
+  const jours=['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi','Dimanche'];
+  const mp={};d.forEach(x=>{if(!mp[x.nom_jour])mp[x.nom_jour]={};mp[x.nom_jour][x.heure]=parseFloat(x.indice_cong_moyen)});
+  let h='<table class="hm-table"><thead><tr><th>Jour</th>';
+  for(let i=0;i<24;i++)h+=`<th>${String(i).padStart(2,'0')}h</th>`;
+  h+='</tr></thead><tbody>';
+  jours.forEach(j=>{
+    h+=`<tr><th style="text-align:left;padding:5px 8px;color:#f1f5f9;white-space:nowrap">${j}</th>`;
+    for(let i=0;i<24;i++){const v=(mp[j]&&mp[j][i])||1;h+=`<td style="background:${heatColor(v)};color:${v>1.4?'#fff':'#94a3b8'}" title="${j} ${i}h · IC=${v}">${v.toFixed(2)}</td>`}
+    h+='</tr>';
+  });
+  h+='</tbody></table>';
+  document.getElementById('heatmap').innerHTML=h;
+  document.getElementById('sub-heatmap').textContent=(quartier?`Quartier : ${quartier}`:'Tous quartiers')+' · Indice moyen par créneau · 7 jours × 24 heures';
+}
+
+async function loadEvolution(){
+  const d=await fetch(`${API}/evolution_mensuelle`).then(r=>r.json());
+  if(chEvo){chEvo.destroy();chEvo=null;}
+  chEvo=new Chart(document.getElementById('ch-evo'),{type:'line',data:{
+    labels:d.map(x=>`${x.nom_mois.slice(0,3)} ${x.annee}`),
+    datasets:[
+      {label:'Congestion',data:d.map(x=>x.congestion_moy),borderColor:'#3b82f6',backgroundColor:'rgba(59,130,246,.1)',borderWidth:2,pointRadius:2,fill:true,tension:.4,yAxisID:'y'},
+      {label:'Vitesse km/h',data:d.map(x=>x.vitesse_moy),borderColor:'#10b981',backgroundColor:'transparent',borderWidth:2,pointRadius:2,tension:.4,borderDash:[4,4],yAxisID:'y2'}]},
+    options:{...CD,scales:{
+      x:{...CD.scales.x,ticks:{...CD.scales.x.ticks,maxRotation:45,maxTicksLimit:12}},
+      y:{...CD.scales.y,position:'left',title:{display:true,text:'Congestion',color:'#94a3b8'}},
+      y2:{...CD.scales.y,position:'right',grid:{drawOnChartArea:false},title:{display:true,text:'km/h',color:'#94a3b8'}}}}});
+}
+
+async function renderRanking(quartier){
+  const url=quartier?`${API}/axes_critiques_filtres?quartier=${encodeURIComponent(quartier)}`:`${API}/axes_critiques`;
+  const d=await fetch(url).then(r=>r.json());
+  const mx=Math.max(...d.map(x=>parseFloat(x.indice_cong_moyen)));
+  let h='<table class="rank-table"><thead><tr><th>#</th><th>Axe</th><th>Quartier</th><th>Congestion</th><th>LOS</th></tr></thead><tbody>';
+  d.forEach((x,i)=>{
+    const r=i+1,rc=r===1?'r1':r===2?'r2':r===3?'r3':'rn',l=los(parseFloat(x.indice_cong_moyen));
+    const pct=((parseFloat(x.indice_cong_moyen)/mx)*100).toFixed(0);
+    const nm=x.axe_principal.length>26?x.axe_principal.slice(0,26)+'…':x.axe_principal;
+    h+=`<tr><td><div class="rb ${rc}">${r}</div></td><td><div style="font-size:12px;font-weight:600">${nm}</div><div class="pbar"><div class="pfill" style="width:${pct}%"></div></div></td><td style="color:var(--t2);font-size:11px">${x.quartier}</td><td style="font-weight:700;color:var(--blue)">${x.indice_cong_moyen}</td><td><span class="los l${l}">${l}</span></td></tr>`;
+  });
+  h+='</tbody></table>';
+  document.getElementById('ranking').innerHTML=h;
+  document.getElementById('sub-rank').textContent=(quartier?`Quartier : ${quartier}`:'Tous quartiers')+' · Niveau de service et progression';
+}
+
+async function loadFiltres(){
+  const q=await fetch(`${API}/filtres/quartiers`).then(r=>r.json());
+  // Dropdown
+  const sel=document.getElementById('f-quartier');
+  q.forEach(x=>{const o=document.createElement('option');o.value=x;o.textContent=x;sel.appendChild(o)});
+  // Boutons rapides
+  const qf=document.getElementById('quick-filters');
+  q.forEach(x=>{
+    const btn=document.createElement('button');
+    btn.className='qbtn';btn.textContent=x;btn.dataset.q=x;
+    btn.onclick=()=>quickFilter(x);
+    qf.appendChild(btn);
   });
 }
 
-// ── Chart Météo ────────────────────────────────────────────
-async function loadMeteo() {
-  const data = await fetch(`${API}/impact_meteo`).then(r => r.json());
-  const colors = {
-    'Ensoleille':   '#f59e0b',
-    'Nuageux':      '#94a3b8',
-    'Pluie legere': '#06b6d4',
-    'Pluie forte':  '#3b82f6',
-    'Orage':        '#8b5cf6',
-  };
-  new Chart(document.getElementById('chart-meteo'), {
-    type: 'bar',
-    data: {
-      labels: data.map(d => d.condition_meteo),
-      datasets: [
-        {
-          label: 'Indice congestion',
-          data: data.map(d => d.indice_cong_moyen),
-          backgroundColor: data.map(d =>
-            (colors[d.condition_meteo] || '#3b82f6') + 'cc'),
-          borderColor: data.map(d => colors[d.condition_meteo] || '#3b82f6'),
-          borderWidth: 1, borderRadius: 6,
-          yAxisID: 'y',
-        },
-        {
-          label: 'Vitesse moy (km/h)',
-          data: data.map(d => d.vitesse_moy),
-          type: 'line',
-          borderColor: '#10b981',
-          backgroundColor: 'rgba(16,185,129,0.1)',
-          borderWidth: 2, pointRadius: 5,
-          fill: true, tension: 0.4,
-          yAxisID: 'y2',
-        }
-      ]
-    },
-    options: {
-      ...CHART_DEFAULTS,
-      scales: {
-        x: { ...CHART_DEFAULTS.scales.x },
-        y: {
-          ...CHART_DEFAULTS.scales.y,
-          position: 'left',
-          title: { display: true, text: 'Congestion', color: '#94a3b8' }
-        },
-        y2: {
-          ...CHART_DEFAULTS.scales.y,
-          position: 'right',
-          grid: { drawOnChartArea: false },
-          title: { display: true, text: 'Vitesse km/h', color: '#94a3b8' }
-        }
-      }
-    }
-  });
+// Filtre rapide via boutons
+function quickFilter(quartier){
+  activeQuartier=quartier;
+  document.getElementById('f-quartier').value=quartier;
+  document.querySelectorAll('.qbtn').forEach(b=>b.classList.toggle('active',b.dataset.q===quartier||(quartier===''&&!b.dataset.q)));
+  updateActiveTag(quartier,'');
+  renderAxes(quartier);
+  renderHeatmap(quartier);
+  renderRanking(quartier);
 }
 
-// ── Heatmap ────────────────────────────────────────────────
-async function loadHeatmap() {
-  const data = await fetch(`${API}/profil_semaine`).then(r => r.json());
-  const jours = ['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi','Dimanche'];
-  const heures = Array.from({length:24}, (_,i) => i);
-
-  const map = {};
-  data.forEach(d => {
-    if (!map[d.nom_jour]) map[d.nom_jour] = {};
-    map[d.nom_jour][d.heure] = parseFloat(d.indice_cong_moyen);
-  });
-
-  let html = '<table class="heatmap-table"><thead><tr><th>Jour</th>';
-  heures.forEach(h => {
-    html += `<th>${String(h).padStart(2,'0')}h</th>`;
-  });
-  html += '</tr></thead><tbody>';
-
-  jours.forEach(jour => {
-    html += `<tr><th style="text-align:left;padding:6px 8px;color:#f1f5f9;white-space:nowrap">${jour}</th>`;
-    heures.forEach(h => {
-      const v = (map[jour] && map[jour][h]) ? map[jour][h] : 1.0;
-      const bg = heatColor(v);
-      const textColor = v > 1.4 ? '#fff' : '#94a3b8';
-      html += `<td style="background:${bg};color:${textColor}" title="${jour} ${h}h — Congestion: ${v}">${v.toFixed(2)}</td>`;
-    });
-    html += '</tr>';
-  });
-
-  html += '</tbody></table>';
-  document.getElementById('heatmap-container').innerHTML = html;
+// Bouton Appliquer (dropdown)
+function applyFilters(){
+  const q=document.getElementById('f-quartier').value;
+  const l=document.getElementById('f-los').value;
+  activeQuartier=q;
+  // Sync boutons rapides
+  document.querySelectorAll('.qbtn').forEach(b=>b.classList.toggle('active',b.dataset.q===q||(q===''&&!b.dataset.q)));
+  updateActiveTag(q,l);
+  renderAxes(q);
+  renderHeatmap(q);
+  renderRanking(q);
 }
 
-// ── Evolution mensuelle ────────────────────────────────────
-async function loadEvolution() {
-  const data = await fetch(`${API}/evolution_mensuelle`).then(r => r.json());
-  const labels = data.map(d => `${d.nom_mois} ${d.annee}`);
-  new Chart(document.getElementById('chart-evolution'), {
-    type: 'line',
-    data: {
-      labels,
-      datasets: [
-        {
-          label: 'Indice congestion',
-          data: data.map(d => d.congestion_moy),
-          borderColor: '#3b82f6',
-          backgroundColor: 'rgba(59,130,246,0.1)',
-          borderWidth: 2, pointRadius: 3,
-          fill: true, tension: 0.4,
-          yAxisID: 'y',
-        },
-        {
-          label: 'Vitesse moy (km/h)',
-          data: data.map(d => d.vitesse_moy),
-          borderColor: '#10b981',
-          backgroundColor: 'transparent',
-          borderWidth: 2, pointRadius: 2,
-          tension: 0.4, borderDash: [4,4],
-          yAxisID: 'y2',
-        }
-      ]
-    },
-    options: {
-      ...CHART_DEFAULTS,
-      scales: {
-        x: {
-          ...CHART_DEFAULTS.scales.x,
-          ticks: {
-            ...CHART_DEFAULTS.scales.x.ticks,
-            maxRotation: 45, maxTicksLimit: 12,
-          }
-        },
-        y: {
-          ...CHART_DEFAULTS.scales.y, position: 'left',
-          title: { display: true, text: 'Congestion', color: '#94a3b8' }
-        },
-        y2: {
-          ...CHART_DEFAULTS.scales.y, position: 'right',
-          grid: { drawOnChartArea: false },
-          title: { display: true, text: 'km/h', color: '#94a3b8' }
-        }
-      }
-    }
-  });
+function resetFilters(){
+  document.getElementById('f-quartier').value='';
+  document.getElementById('f-los').value='';
+  quickFilter('');
 }
 
-// ── Ranking Table ──────────────────────────────────────────
-async function loadRanking() {
-  const data = await fetch(`${API}/axes_critiques`).then(r => r.json());
-  const maxIndice = Math.max(...data.map(d => d.indice_cong_moyen));
-
-  let html = `
-    <table class="ranking-table">
-      <thead>
-        <tr>
-          <th>#</th>
-          <th>Axe</th>
-          <th>Quartier</th>
-          <th>Congestion</th>
-          <th>LOS</th>
-        </tr>
-      </thead>
-      <tbody>
-  `;
-
-  data.forEach((d, i) => {
-    const rank = i + 1;
-    const rankClass = rank === 1 ? 'rank-1' : rank === 2 ? 'rank-2' : rank === 3 ? 'rank-3' : 'rank-n';
-    const los = losFromIndice(d.indice_cong_moyen);
-    const pct = ((d.indice_cong_moyen / maxIndice) * 100).toFixed(0);
-    const nom = d.axe_principal.length > 28
-      ? d.axe_principal.substring(0,28) + '…' : d.axe_principal;
-
-    html += `
-      <tr>
-        <td><div class="rank-badge ${rankClass}">${rank}</div></td>
-        <td>
-          <div style="font-size:12px;font-weight:600">${nom}</div>
-          <div class="progress-bar">
-            <div class="progress-fill" style="width:${pct}%"></div>
-          </div>
-        </td>
-        <td style="color:var(--text-secondary);font-size:12px">${d.quartier}</td>
-        <td style="font-weight:700;color:var(--accent-blue)">${d.indice_cong_moyen}</td>
-        <td><span class="los-badge los-${los}">${los}</span></td>
-      </tr>
-    `;
-  });
-
-  html += '</tbody></table>';
-  document.getElementById('ranking-table-container').innerHTML = html;
+function updateActiveTag(q,l){
+  const tag=document.getElementById('active-tag');
+  const txt=document.getElementById('active-tag-text');
+  const parts=[];
+  if(q)parts.push(`Quartier : ${q}`);
+  if(l)parts.push(`LOS : ${l}`);
+  if(parts.length){tag.classList.add('show');txt.textContent=parts.join(' · ')}
+  else{tag.classList.remove('show')}
 }
 
-// ── Init ───────────────────────────────────────────────────
-async function init() {
-  await Promise.all([
-    loadKPIs(),
-    loadAxes(),
-    loadMeteo(),
-    loadHeatmap(),
-    loadEvolution(),
-    loadRanking(),
-  ]);
-}
-
-init();
+// Init
+Promise.all([loadKPIs(),renderAxes(''),loadMeteo(),loadMap(),renderHeatmap(''),loadEvolution(),renderRanking(''),loadFiltres()]);
 </script>
 </body>
 </html>
