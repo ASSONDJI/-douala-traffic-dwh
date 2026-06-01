@@ -25,3 +25,4 @@ docker/postgres-data/
 .DS_Store
 Thumbs.db
 cache/
+psycopg2/
