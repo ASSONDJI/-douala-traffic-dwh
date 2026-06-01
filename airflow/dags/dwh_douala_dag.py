@@ -3,9 +3,9 @@
 ║     DAG — Entrepôt de Données Embouteillages Douala             ║
 ║     Pipeline ETL complet — Méthodologie Kimball                  ║
 ║                                                                  ║
-║     Auteur  : Membre 2 — feat/airflow-orchestration             ║
+║     Auteur  :Duclair — feat/airflow-orchestration             ║
 ║     Projet  : Master 1 IA — DWH Douala Traffic                  ║
-║     Version : 3.0.0  (aligné sur etl/load/ du chef)            ║
+║     Version : 3.0.0  (aligné sur etl/load/ )            ║
 ╚══════════════════════════════════════════════════════════════════╝
 
 Graphe d'exécution :
@@ -38,10 +38,9 @@ Scripts de référence :
   - etl/extract/01_extract_osm_douala.py
   - etl/extract/02_extract_meteo_douala.py
   - etl/extract/03_generate_trafic_data.py
-  - etl/load/01_load_dim_temps.py      ← script du chef
-  - etl/load/02_load_dim_lieu.py       ← script du chef
-  - etl/load/03_load_fait_embouteillage.py ← script du chef
-
+  - etl/load/01_load_dim_temps.py     
+  - etl/load/02_load_dim_lieu.py       
+  - etl/load/03_load_fait_embouteillage.py
 Planning : tous les jours à 06h00 WAT (UTC+1 → cron: 0 5 * * *)
 Connexion : AIRFLOW_CONN_DOUALA_DWH (définie dans docker-compose.yml)
 """
@@ -72,6 +71,14 @@ ETL_LOAD    = "/opt/airflow/etl/load"
 DATA_DIR    = "/opt/airflow/data"
 
 log = logging.getLogger(__name__)
+
+# Création des dossiers de données (fix PermissionError — review chef)
+for _dir in [
+    os.path.join(DATA_DIR, "raw/osm"),
+    os.path.join(DATA_DIR, "raw/meteo"),
+    os.path.join(DATA_DIR, "generated"),
+]:
+    os.makedirs(_dir, exist_ok=True)
 
 # ──────────────────────────────────────────────────────────────────
 #  Fonction utilitaire — exécution d'un script Python
@@ -203,9 +210,9 @@ def task_generate_trafic(**context):
 
 # ──────────────────────────────────────────────────────────────────
 #  TÂCHE 4 — load_dim_temps
-#  Script : etl/load/01_load_dim_temps.py (créé par le chef)
+#  Script : etl/load/01_load_dim_temps.py 
 #
-#  Ce script du chef gère :
+#  Ce script qui gère :
 #  - id_temps = BIGINT format YYYYMMDDHHMM
 #  - Grain 5 minutes, période 2022-2026
 #  - Jours fériés Cameroun (7 jours officiels)
@@ -231,9 +238,9 @@ def task_load_dim_temps(**context):
 
 # ──────────────────────────────────────────────────────────────────
 #  TÂCHE 5 — load_dim_lieu
-#  Script : etl/load/02_load_dim_lieu.py (créé par le chef)
+#  Script : etl/load/02_load_dim_lieu.py 
 #
-#  Ce script du chef gère :
+#  Ce script qui gère :
 #  - Lecture de data/raw/osm/segments_douala.csv
 #  - Colonnes exactes : code_segment, nom_segment, axe_principal,
 #    type_route, quartier, arrondissement, commune, region, pays,
@@ -266,9 +273,9 @@ def task_load_dim_lieu(**context):
 
 # ──────────────────────────────────────────────────────────────────
 #  TÂCHE 6 — load_fait_embouteillage
-#  Script : etl/load/03_load_fait_embouteillage.py (créé par le chef)
+#  Script : etl/load/03_load_fait_embouteillage.py 
 #
-#  Ce script du chef gère :
+#  Ce script qui gère :
 #  - Lecture de data/generated/trafic_douala_2023_2024.csv
 #  - Résolution des 5 FK : id_temps, id_lieu, id_evenement,
 #    id_vehicule (INCONNU), id_capteur (SIM_PYTHON)
@@ -300,7 +307,7 @@ def task_load_fait_embouteillage(**context):
 
 # ──────────────────────────────────────────────────────────────────
 #  TÂCHE 7 — refresh_vues_olap
-#  Note : le script 03_load_fait_embouteillage.py du chef inclut
+#  Note : le script 03_load_fait_embouteillage.py du . inclut
 #  déjà le refresh des vues. Cette tâche permet de les rafraîchir
 #  indépendamment (ex: run manuel sans recharger les faits).
 # ──────────────────────────────────────────────────────────────────
