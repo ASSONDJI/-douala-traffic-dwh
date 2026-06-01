@@ -75,7 +75,8 @@ sql = """
         vitesse_moyenne_kmh, vitesse_libre_kmh,
         indice_congestion, niveau_service, longueur_bouchon_km,
         temps_parcours_min, temps_reference_min, delai_supplementaire_min,
-        flag_incident, flag_donnee_manquante, batch_id
+        flag_incident, flag_donnee_manquante, batch_id,
+        ts
     ) VALUES %s
     ON CONFLICT DO NOTHING
 """
@@ -106,6 +107,7 @@ for _, row in df.iterrows():
         bool(row['flag_incident']),
         False,
         batch_id,
+        row['date_heure'],
     ))
 
     if len(records) == BATCH:
