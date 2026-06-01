@@ -4,7 +4,7 @@ from psycopg2.extras import execute_values
 import os
 
 DB_CONFIG = {
-    "host":     "localhost",
+    "host":     "postgres-dwh",
     "port":     5432,
     "dbname":   "douala_traffic_dwh",
     "user":     "dwh_admin",
