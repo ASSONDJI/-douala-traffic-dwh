@@ -1,0 +1,21 @@
+version: 2
+
+models:
+  - name: stg_trafic
+    description: "Couche staging — données trafic nettoyées et validées"
+    columns:
+      - name: id_fait
+        description: "Clé primaire de la mesure"
+        tests:
+          - unique
+          - not_null
+      - name: indice_congestion
+        description: "Indice de congestion (>0)"
+        tests:
+          - not_null
+      - name: niveau_service
+        description: "Niveau de service LOS (A à F)"
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['A', 'B', 'C', 'D', 'E', 'F']
