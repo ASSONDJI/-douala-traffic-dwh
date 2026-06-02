@@ -1,0 +1,26 @@
+name: douala_traffic
+profile: douala_traffic
+config-version: 2
+
+model-paths: ["models"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+test-paths: ["tests"]
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+models:
+  douala_traffic:
+    staging:
+      +materialized: view
+      +schema: staging
+    dimensions:
+      +materialized: table
+      +schema: warehouse
+    facts:
+      +materialized: table
+      +schema: warehouse
+    aggregates:
+      +materialized: table
+      +schema: datamart

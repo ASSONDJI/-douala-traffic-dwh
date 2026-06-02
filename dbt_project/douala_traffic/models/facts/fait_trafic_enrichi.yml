@@ -1,0 +1,17 @@
+version: 2
+
+models:
+  - name: fait_trafic_enrichi
+    description: "Table de faits enrichie — jointures avec toutes les dimensions"
+    columns:
+      - name: id_fait
+        tests:
+          - unique
+          - not_null
+      - name: quartier
+        tests:
+          - not_null
+      - name: libelle_congestion
+        tests:
+          - accepted_values:
+              values: ['Fluide', 'Bon', 'Chargé', 'Instable', 'Saturé', 'Bloqué']
