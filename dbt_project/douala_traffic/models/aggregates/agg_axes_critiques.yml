@@ -1,0 +1,14 @@
+version: 2
+
+models:
+  - name: agg_axes_critiques
+    description: "Agrégat par axe routier — résumé des indicateurs de congestion sur tous les axes critiques de Douala. Alimenté par FAIT_EMBOUTEILLAGE jointure DIM_LIEU."
+    columns:
+      - name: axe_principal
+        description: "Nom de l'axe routier (ex: Boulevard de la Liberté)"
+      - name: congestion_moyenne
+        description: "Indice de congestion moyen (1.0=fluide, >2.0=saturé)"
+      - name: pct_temps_sature
+        description: "Pourcentage du temps où l'axe est en LOS E ou F (saturé/bloqué)"
+      - name: nb_incidents
+        description: "Nombre d'incidents détectés sur cet axe"
